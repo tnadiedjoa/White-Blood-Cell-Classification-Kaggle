@@ -1,0 +1,19 @@
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# Challenge data and trained weights (see README.md, "Reproducing")
+/data/
+/models/*.pt
+
+# Feature caches of the classical pipeline, rebuilt by notebooks/02_classical_ml.ipynb
+/results/classical_ml/train_features.csv
+/results/classical_ml/test_features.csv
+
+# LaTeX build files (report.pdf is versioned)
+report/*.aux
+report/*.bbl
+report/*.blg
+report/*.log
+report/*.out
+report/*.toc

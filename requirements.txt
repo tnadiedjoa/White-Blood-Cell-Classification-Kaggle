@@ -1,0 +1,23 @@
+# Tested with Python 3.12
+numpy==2.4.4
+pandas==3.0.2
+scipy==1.17.1
+pillow==12.2.0
+joblib==1.5.3
+
+# Classical pipeline (segmentation, handcrafted features, classifiers)
+opencv-python-headless==4.13.0.92
+scikit-image==0.26.0
+scikit-learn==1.8.0
+imbalanced-learn==0.14.1
+lightgbm==4.6.0
+
+# Deep-learning pipeline
+torch==2.11.0
+torchvision==0.26.0
+albumentations==2.0.8
+
+# Figures and notebooks (open them with JupyterLab, Notebook or VS Code)
+matplotlib==3.10.8
+seaborn==0.13.2
+ipykernel==7.2.0

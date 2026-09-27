@@ -1,0 +1,22 @@
+{
+  "protocol": "EfficientNet-B3, single stratified 85/15 split, at most 15 epochs (original experiment: 5-fold CV)",
+  "val_n": 4336,
+  "val_macro_f1": 0.5521,
+  "val_accuracy": 0.7163,
+  "epochs_run": 15,
+  "per_class_f1": {
+    "BA": 0.9231,
+    "BL": 0.8308,
+    "BNE": 0.1353,
+    "EO": 0.7832,
+    "LY": 0.8169,
+    "MMY": 0.2985,
+    "MO": 0.7875,
+    "MY": 0.5238,
+    "PC": 0.3429,
+    "PLY": 0.25,
+    "PMY": 0.4,
+    "SNE": 0.8104,
+    "VLY": 0.2743
+  }
+}

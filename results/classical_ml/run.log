@@ -1,0 +1,77 @@
+[00:51:03] === STAGE 1: FEATURE EXTRACTION ===
+[00:51:03] train=28901 test=9634
+[00:51:04] Reinhard reference LAB mean=(190.09, 138.60, 132.77), std=(22.19, 4.25, 3.24)
+[01:15:25] Train extraction done in 1461s, 28901 images
+[01:23:29] Test extraction done in 484s, 9634 images
+[01:23:42] Saved results/classical_ml/train_features.csv ((28901, 212)) and results/classical_ml/test_features.csv ((9634, 211))
+[01:23:42] === STAGE 2: FEATURE SELECTION & PCA ===
+[01:23:42] Initial number of features: 210
+[01:23:42] Classes: ['BA', 'BL', 'BNE', 'EO', 'LY', 'MMY', 'MO', 'MY', 'PC', 'PLY', 'PMY', 'SNE', 'VLY']
+[01:23:42] After removing near-zero variance: 210 features
+[01:23:42] After removing correlated features (>0.95): 131 features
+[01:23:42] PCA: 20 components, explained variance = 0.787
+[01:23:43] Final feature set: 151 features (raw + PCA)
+[01:23:43] Saved selected/PCA features to results/classical_ml/features_selected.npz
+[01:23:43] === STAGE 3: REAL LIGHTGBM FEATURE IMPORTANCE ===
+[01:24:56] Saved real LightGBM feature importance (30 rows) and figure
+[01:24:56] Top 10: nuc_B_kurt=2586, nuc_B_lab_std=2513, nuc_H_skew=2476, nuc_R_std=2466, nuc_minor_axis=2414, nuc_lbp_hist_6=2289, nuc_H_std=2221, nuc_lbp_mean=2174, nuc_B_lab_skew=2166, nuc_S_std=2098
+[01:24:56] === STAGE 4: 6-CLASSIFIER 5-FOLD CV (CAPPED SMOTE) ===
+[01:24:57] --- Model: LightGBM_tuned ---
+[01:26:39]   Fold 1: macro-F1 = 0.5112 (n_train_resampled=39089, elapsed=102s)
+[01:28:21]   Fold 2: macro-F1 = 0.5059 (n_train_resampled=39089, elapsed=204s)
+[01:30:03]   Fold 3: macro-F1 = 0.5013 (n_train_resampled=39090, elapsed=307s)
+[01:31:45]   Fold 4: macro-F1 = 0.5508 (n_train_resampled=39090, elapsed=408s)
+[01:33:26]   Fold 5: macro-F1 = 0.4752 (n_train_resampled=39090, elapsed=509s)
+[01:33:26]   -> LightGBM_tuned: Mean = 0.5089 +/- 0.0244 (total 509s)
+[01:33:26] --- Model: RF ---
+[01:35:32]   Fold 1: macro-F1 = 0.4756 (n_train_resampled=39089, elapsed=126s)
+[01:37:36]   Fold 2: macro-F1 = 0.5064 (n_train_resampled=39089, elapsed=250s)
+[01:39:40]   Fold 3: macro-F1 = 0.4826 (n_train_resampled=39090, elapsed=373s)
+[01:41:44]   Fold 4: macro-F1 = 0.4693 (n_train_resampled=39090, elapsed=498s)
+[01:43:48]   Fold 5: macro-F1 = 0.4524 (n_train_resampled=39090, elapsed=622s)
+[01:43:48]   -> RF: Mean = 0.4773 +/- 0.0177 (total 622s)
+[01:43:48] --- Model: ExtraTrees ---
+[01:44:22]   Fold 1: macro-F1 = 0.4445 (n_train_resampled=39089, elapsed=34s)
+[01:44:54]   Fold 2: macro-F1 = 0.4185 (n_train_resampled=39089, elapsed=66s)
+[01:45:26]   Fold 3: macro-F1 = 0.4461 (n_train_resampled=39090, elapsed=98s)
+[01:45:57]   Fold 4: macro-F1 = 0.4472 (n_train_resampled=39090, elapsed=129s)
+[01:46:29]   Fold 5: macro-F1 = 0.4156 (n_train_resampled=39090, elapsed=161s)
+[01:46:29]   -> ExtraTrees: Mean = 0.4344 +/- 0.0142 (total 161s)
+[01:46:29] --- Model: SVM_RBF ---
+[01:53:43]   Fold 1: macro-F1 = 0.4521 (n_train_resampled=39089, elapsed=434s)
+[02:00:52]   Fold 2: macro-F1 = 0.4313 (n_train_resampled=39089, elapsed=863s)
+[02:08:06]   Fold 3: macro-F1 = 0.4529 (n_train_resampled=39090, elapsed=1297s)
+[02:15:21]   Fold 4: macro-F1 = 0.4455 (n_train_resampled=39090, elapsed=1732s)
+[02:22:33]   Fold 5: macro-F1 = 0.4375 (n_train_resampled=39090, elapsed=2164s)
+[02:22:33]   -> SVM_RBF: Mean = 0.4439 +/- 0.0084 (total 2164s)
+[02:22:33] --- Model: Voting ---
+[02:34:05]   Fold 1: macro-F1 = 0.5026 (n_train_resampled=39089, elapsed=692s)
+[02:45:37]   Fold 2: macro-F1 = 0.5210 (n_train_resampled=39089, elapsed=1384s)
+[02:57:10]   Fold 3: macro-F1 = 0.4896 (n_train_resampled=39090, elapsed=2077s)
+[03:09:04]   Fold 4: macro-F1 = 0.4874 (n_train_resampled=39090, elapsed=2791s)
+[03:20:37]   Fold 5: macro-F1 = 0.4808 (n_train_resampled=39090, elapsed=3484s)
+[03:20:37]   -> Voting: Mean = 0.4963 +/- 0.0142 (total 3484s)
+[03:20:37] --- Model: Stacking ---
+[04:13:49]   Fold 1: macro-F1 = 0.4664 (n_train_resampled=39089, elapsed=3192s)
+[05:06:46]   Fold 2: macro-F1 = 0.4411 (n_train_resampled=39089, elapsed=6369s)
+[06:00:59]   Fold 3: macro-F1 = 0.4812 (n_train_resampled=39090, elapsed=9622s)
+[06:54:56]   Fold 4: macro-F1 = 0.4738 (n_train_resampled=39090, elapsed=12859s)
+[07:49:09]   Fold 5: macro-F1 = 0.4345 (n_train_resampled=39090, elapsed=16112s)
+[07:49:09]   -> Stacking: Mean = 0.4594 +/- 0.0184 (total 16112s)
+[07:49:09] === CV SUMMARY ===
+[07:49:09]   LightGBM_tuned      : 0.5089 +/- 0.0244
+[07:49:09]   Voting              : 0.4963 +/- 0.0142
+[07:49:09]   RF                  : 0.4773 +/- 0.0177
+[07:49:09]   Stacking            : 0.4594 +/- 0.0184
+[07:49:09]   SVM_RBF             : 0.4439 +/- 0.0084
+[07:49:09]   ExtraTrees          : 0.4344 +/- 0.0142
+[07:49:09] === STAGE 5: BEST MODEL — CONFUSION MATRIX & CLASSIFICATION REPORT ===
+[07:49:09] Best model: LightGBM_tuned (macro-F1 = 0.5089)
+[07:50:50]   OOF fold 1 done
+[07:52:33]   OOF fold 2 done
+[07:54:14]   OOF fold 3 done
+[07:56:00]   OOF fold 4 done
+[07:57:53]   OOF fold 5 done
+[07:57:53] 
+[07:57:53] Saved summary.json: {'best_model': 'LightGBM_tuned', 'best_macro_f1_mean': 0.508897136457368, 'best_macro_f1_std': 0.02435229954658742, 'accuracy_oof': 0.8317013252136605, 'smote_cap_per_class': 2000, 'n_features_final': 151, 'all_model_results': {'LightGBM_tuned': {'mean': 0.508897136457368, 'std': 0.02435229954658742}, 'RF': {'mean': 0.4772802264733807, 'std': 0.017672308018674022}, 'ExtraTrees': {'mean': 0.4343751650970919, 'std': 0.014207151864739675}, 'SVM_RBF': {'mean': 0.4438639318395133, 'std': 0.008394101767970008}, 'Voting': {'mean': 0.49625618780882774, 'std': 0.014226791913752661}, 'Stacking': {'mean': 0.4593887267466771, 'std': 0.018387402566763474}}}
+[07:57:53] ALL_STAGES_DONE

@@ -36,7 +36,7 @@ White blood cell (WBC) classification from peripheral blood smear microscopy is 
 
 \textbf{Part~I} presents a classical machine learning pipeline following the textbook recipe recommended by Al-Dulaimi et al.~\cite{aldulaimi2018}: Reinhard color normalization in LAB space, marker-controlled Watershed cell segmentation, Morphological Geodesic Active Contours (GAC) for nucleus refinement, then a 210-dimensional handcrafted feature vector (shape, color, texture via GLCM/LBP/HOG, Fourier descriptors), classified using SMOTE-balanced LightGBM, Random Forest, ExtraTrees, SVM-RBF, and Voting/Stacking ensembles under 5-fold stratified cross-validation, reaching macro-F1~=~0.509.
 
-\textbf{Part~II} traces nine successive deep-learning experiments, each motivated by specific failures of the previous one. Starting from a vanilla EfficientNet-B3 baseline (macro-F1~=~0.55), we explored CBAM attention, late fusion with handcrafted morphometry, Wiener/Laplacian preprocessing, and paper-based segmentation pipelines, before pivoting to ConvNeXt-Base with Focal Loss, CutMix/Mixup, and 2-phase fine-tuning. We document a critical data leakage pitfall (an apparent F1=0.82, corrected to a true F1=0.70 once the validation split was fixed), and present post-hoc experiments with ResNet50, ResNeXt101 with multi-task learning, and a controlled ablation of handcrafted features. The final model is a ConvNeXt-Base with a lightweight channel-attention gate, CLAHE preprocessing and an MLP head, achieving macro-F1 = 0.705 / accuracy = 0.937 on validation.
+\textbf{Part~II} traces nine successive deep-learning experiments, each motivated by specific failures of the previous one. Starting from a vanilla EfficientNet-B3 baseline (macro-F1~=~0.55), we explored CBAM attention, late fusion with handcrafted morphometry, Wiener/Laplacian preprocessing, and paper-based segmentation pipelines, before pivoting to ConvNeXt-Base with Focal Loss, CutMix/Mixup, and 2-phase fine-tuning. We document a critical data leakage pitfall (an apparent F1=0.82, corrected to a leak-free validation F1 of 0.70 once the validation split was fixed), and present post-hoc experiments with ResNet50, ResNeXt101 with multi-task learning, and a controlled ablation of handcrafted features. The final model is a ConvNeXt-Base with a lightweight channel-attention gate, CLAHE preprocessing and an MLP head, achieving macro-F1 = 0.705 / accuracy = 0.937 on validation.
 
 Beyond raw scores, our results suggest that (1)~learned representations clearly outperform handcrafted features (0.70 vs.\ 0.51 macro-F1), (2)~within the designs we tried, architectural complexity did not pay off: attention, multi-task learning and fusion did not bring a measurable gain over a plain ConvNeXt + MLP, and (3)~a correct evaluation protocol is essential: splitting after oversampling inflated the validation score from 0.70 to 0.82.
 
@@ -158,9 +158,9 @@ The nucleus is initially segmented via Otsu thresholding on the L channel (LAB) 
 From the segmented cell, nucleus, and cytoplasm masks, we extract a comprehensive feature vector (210 features) inspired by the morphological feature sets of the literature~\cite{gautam2014, aldulaimi2018}:
 
 \begin{itemize}
-    \item \textbf{Shape (A, B, D)}: Area, perimeter, circularity, eccentricity, solidity (computed twice, under the names solidity and convexity), extent, axes and axis ratio, equivalent diameter, number of lobes and 7 Hu moments for the nucleus; eccentricity, solidity, circularity and the two axes for the whole cell ($\sim$25 features).
+    \item \textbf{Shape (A, B, D)}: Area, perimeter, circularity, eccentricity, solidity (computed twice, under the names solidity and convexity), extent, axes and axis ratio, equivalent diameter, number of lobes and 7 Hu moments for the nucleus; area, eccentricity, solidity, circularity and the two axes for the whole cell; cytoplasm area and nucleus-to-cell ratio (27 features).
     \item \textbf{Color (C)}: Mean, std, skewness, kurtosis of each channel in RGB, HSV, and LAB color spaces, computed separately for nucleus and cytoplasm. Plus nucleus-specific ratios (R/G, R/B, G/B) ($\sim$75 features).
-    \item \textbf{Texture (GLCM + LBP)}: Gray-Level Co-occurrence Matrix properties (contrast, dissimilarity, homogeneity, energy, correlation) at distances 1 and 3, angles 0, $\pi/4$, $\pi/2$. Local Binary Patterns (8 neighbors, radius 1, uniform) with 10-bin histogram. Computed for nucleus and cytoplasm ($\sim$30 features).
+    \item \textbf{Texture (GLCM + LBP)}: Gray-Level Co-occurrence Matrix properties (contrast, dissimilarity, homogeneity, energy, correlation) averaged over distances 1 and 3 and angles 0, $\pi/4$, $\pi/2$. Local Binary Patterns (8 neighbors, radius 1, uniform) with mean, standard deviation and 10-bin histogram. Computed for nucleus and cytoplasm (34 features).
     \item \textbf{HOG}: Histogram of Oriented Gradients (8 orientations, 32$\times$32 pixels/cell, 2$\times$2 cells/block) on 64$\times$64 cropped regions of nucleus and cytoplasm ($\sim$64 features).
     \item \textbf{Fourier Descriptors}: 10 magnitudes of the FFT of the nucleus contour, normalized by the DC term. Taking magnitudes makes them invariant to rotation, but not to translation or scale, since the DC term depends on the position of the nucleus in the image.
 \end{itemize}
@@ -169,7 +169,7 @@ After extraction, we remove near-zero variance features and features with correl
 
 \subsection{Classification}
 
-Features are standardized (zero mean, unit variance) and class imbalance is handled via SMOTE~\cite{chawla2002smote} (k=3 neighbors) inside each cross-validation fold. Rather than raising every class to the majority count (13,015 SNE images), which would make the SVM-based models impractically slow, SMOTE raises each rare class to 2,000 samples (with $k=1$ when a class has too few samples in a fold for $k=3$). We evaluate 6 classifiers with 5-fold stratified cross-validation:
+Features are standardized (zero mean, unit variance) and class imbalance is handled via SMOTE~\cite{chawla2002smote} (k=3 neighbors) inside each cross-validation fold. Rather than raising every class to the majority count (13,015 SNE images), which would make the SVM-based models impractically slow, SMOTE raises every class with fewer than 2,000 training-fold images (10 of 13) to 2,000 samples (with $k=1$ when a class has too few samples in a fold for $k=3$). We evaluate 6 classifiers with 5-fold stratified cross-validation:
 
 \begin{itemize}
     \item \textbf{LightGBM}~\cite{ke2017lightgbm} (tuned via Optuna~\cite{akiba2019optuna}: 1755 estimators, lr=0.034, 54 leaves, depth 6)
@@ -247,7 +247,7 @@ To improve interpretability, we extracted global feature importances (split coun
 \end{tabular}
 \end{table}
 
-The model relies mostly on the color statistics and micro-texture of the nucleus, i.e.\ on chromatin appearance: among the 30 most used features, nucleus color statistics account for about half of the splits, followed by LBP texture ($\approx$18\%) and HOG ($\approx$8\%), while no cytoplasm feature appears. The morphometric descriptors often emphasized in the literature (circularity, eccentricity, nucleus-to-cell ratio) are not among them. Split counts are only a rough proxy for importance, so this ranking should be read qualitatively.
+The model relies mostly on the color statistics and micro-texture of the nucleus, i.e.\ on chromatin appearance: among the 30 most used features, nucleus color statistics account for about half of the splits, followed by LBP texture ($\approx$18\%), shape descriptors ($\approx$13\%) and HOG ($\approx$8\%), while no cytoplasm feature appears. The morphometric descriptors often emphasized in the literature (circularity, eccentricity, nucleus-to-cell ratio) are not among them. Split counts are only a rough proxy for importance, so this ranking should be read qualitatively.
 
 % ============================================================
 \section{Part II: Deep Learning}
@@ -468,7 +468,7 @@ Exp 2 & EffNet-B3 + CBAM & HSV crop, Albumentations, hybrid & 0.633 & CNN+SVM & 
 Exp 3 & EffNet-B3 + CBAM & Late fusion, Wiener/Laplacian & 0.641 & Fused+SVM & Marginal gain from fusion \\
 Exp 4 & EffNet-B3 + CBAM & Paper-2014 segmentation, 4 feats & 0.591 & Fused+RF & Rigid pipeline hurt perf.\ \\
 Exp 5 & ConvNeXt-Base & Focal Loss, CutMix, 2-phase, offline crops & 0.822 & DL & \textbf{Inflated by data leakage!} \\
-Exp 6 & ConvNeXt-Base & Leakage fix & 0.699 & DL & True performance after leakage fix \\
+Exp 6 & ConvNeXt-Base & Leakage fix & 0.699 & DL & Leak-free validation score \\
 Exp 7 & ResNet50 + SpatialAtt & Late fusion, 4 morpho feats & 0.651 & DL & Below the ConvNeXt pipelines \\
 Exp 8 & ResNeXt101 + CBAM & Multi-task aux heads, 6 morpho feats & 0.665 & DL & Complex but no gain over Exp 6 \\
 Exp 9 & ConvNeXt + SE gate & CLAHE, with/without morpho ablation & \textbf{0.705} & DL & \textbf{Final model}; morpho feats $\approx$ no effect \\
@@ -496,7 +496,7 @@ Furthermore, an attempt to replace our ad-hoc cropping with the classical segmen
 
 Given the diminishing returns of explicit feature engineering, we completely redesigned the pipeline to prioritize backbone capacity over architectural complexity. We transitioned to a ConvNeXt-Base model (88M parameters), discarded all attention modules and handcrafted branches, and implemented a two-phase fine-tuning strategy with Focal Loss and CutMix/Mixup, offline oversampling of the rare classes and offline cropping (Exp~5).
 
-During this phase, we identified a critical data leakage pitfall: splitting the data \emph{after} the offline oversampling allowed augmented copies of training images to end up in the validation set, artificially inflating the macro-F1 to 0.82 (the validation set also contained augmented images, so its composition differed from later experiments). By splitting the dataset on original image identities and discarding the augmented copies of validation images (Exp~6), we measured the true generalization performance: a macro-F1 of 0.699 and an accuracy of 0.936, a 12-point drop that shows the size of the leakage. A hybrid classifier on the backbone features (Random Forest) scored lower (0.68).
+During this phase, we identified a critical data leakage pitfall: splitting the data \emph{after} the offline oversampling put augmented copies of the same original images on both sides of the split, artificially inflating the macro-F1 to 0.82 (the validation set also contained augmented images, so its composition differed from later experiments). By splitting the dataset on original image identities and discarding the augmented copies of validation images (Exp~6), we measured the leak-free validation performance: a macro-F1 of 0.699 and an accuracy of 0.936, a 12-point drop that shows the size of the leakage. A hybrid classifier on the backbone features (Random Forest) scored lower (0.68).
 
 \subsection{Post-Hoc Ablations: Does Morphology Help Heavy Networks?}
 \label{sec:ablations}
@@ -528,7 +528,7 @@ DL final (ConvNeXt-Base, Final Model) & \textbf{0.705} & \textbf{0.937} \\
 \end{tabular}
 
 \vspace{2pt}
-{\footnotesize The classical pipeline is scored by 5-fold cross-validation, the deep learning models on a held-out validation split.}
+{\footnotesize The classical pipeline is scored by 5-fold cross-validation, the deep learning models on held-out validation splits (85/15 for EfficientNet-B3, 90/10 for ConvNeXt-Base).}
 \end{table}
 
 As summarized in Table~\ref{tab:comparison}, the deep learning approach with ConvNeXt-Base (0.705 macro-F1) substantially outperforms both classical ML (0.509) and the DL baseline with EfficientNet-B3 (0.552). The gap between accuracy (0.937) and macro-F1 (0.705) reflects the extreme class imbalance: the model correctly classifies common classes (SNE, LY) but struggles with rare ones.
@@ -604,7 +604,7 @@ The 9-experiment journey (Figure~\ref{fig:iteration_timeline}) yielded several i
 
 \subsection{Computational Cost and Clinical Feasibility}
 
-Although ConvNeXt-Base is a large model ($\sim$88M parameters), the offline HSV cropping stage substantially reduces irrelevant background and accelerates training and inference: the final model trains at $\approx$84\,s/epoch with a frozen backbone and $\approx$140\,s/epoch during fine-tuning on a single RTX~3090.
+Although ConvNeXt-Base is a large model ($\sim$88M parameters), the offline HSV cropping stage substantially reduces irrelevant background, and computing it once offline avoids re-cropping at every epoch: the final model trains at $\approx$84\,s/epoch with a frozen backbone and $\approx$140\,s/epoch during fine-tuning on a single RTX~3090.
 
 At inference, the pipeline performs a single forward pass per crop, plus 8 optional TTA passes. We did not measure latency, and with rare classes such as PLY still unrecognized, the model is a research baseline rather than a tool ready for clinical use.
 

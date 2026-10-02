@@ -12,6 +12,12 @@ write-up is in [`report/report.pdf`](report/report.pdf).
 
 The challenge is modelled on the public [WBCBench2026](https://www.kaggle.com/competitions/wbc-bench-2026/overview) benchmark.
 
+*Individual course project (Télécom Paris, IMA205, 2026).* The final ConvNeXt-Base reaches
+**0.705 validation macro-F1**, against 0.509 for handcrafted features + LightGBM. Along the way,
+a validation leak that had inflated the score from 0.699 to 0.822 was found and fixed.
+
+![Six of the thirteen white-cell classes](report/figures/class_examples.jpg)
+
 ## Results
 
 | Approach | Validation protocol | Macro-F1 | Accuracy |
@@ -30,6 +36,12 @@ leaderboard, and the protocols differ between rows (cross-validation vs. a singl
 difference between `deep_6` and the final model (+0.006) is within the noise of the validation
 split. Every score in this table is backed by a file in [`results/`](results/) or by the
 outputs of a notebook.
+
+![Validation confusion matrix of the final model](results/deep_9_no_morph/confusion_matrix.png)
+
+Recall is above 95 % on the frequent classes (SNE, LY, EO) and drops to about 50 % on band
+neutrophils (often taken for segmented ones) and on the rare immature classes (MMY, PMY, PC),
+whose few validation images also make these scores noisy; PLY has a single validation image.
 
 ## Final model
 
@@ -54,7 +66,7 @@ outputs of a notebook.
 src/
   segmentation.py          Reinhard normalization, watershed + active-contour segmentation
   features.py              Handcrafted features: shape, colour, texture, HOG, Fourier
-  classical_pipeline.py    Feature selection, 6 classifiers, cross-validation
+  classical_pipeline.py    Feature selection, 4 classifiers and 2 ensembles, cross-validation
   deep_dataset.py          Oversampling, cell cropping, CLAHE, augmentations, leakage-free split
   deep_train.py            Model, two-phase training loop, inference with TTA
 notebooks/
@@ -84,13 +96,15 @@ data/
   sample_submission.csv
 ```
 
+The data come from the course's in-class Kaggle competition and are not redistributed here.
+
 Then run the notebooks in order from the `notebooks/` folder, with any Jupyter front end
 (JupyterLab, Notebook or VS Code).
 
 - `04_final_model.ipynb` creates the oversampled and cropped image folders in `data/` on its
   first run. It loads the trained weights from `models/best_model.pt` (354 MB, not versioned);
   without them, set `RETRAIN = True` to train the model again (about 70 min on one RTX 3090).
-- `02_classical_ml.ipynb` takes 8 to 10 hours on 4 CPU cores, mostly for the Stacking ensemble.
+- `02_classical_ml.ipynb` takes 7 to 10 hours on 4 CPU cores, mostly for the Stacking ensemble.
   The files in `results/classical_ml/` were exported by an earlier scripted run of the same
   functions (log in `run.log`); the notebook reproduces the same scores but does not rewrite
   them.
@@ -99,7 +113,8 @@ Then run the notebooks in order from the `notebooks/` folder, with any Jupyter f
   re-executed.
 
 The report figures are regenerated with `python report/generate_figures.py` from the repository
-root, and the PDF with `pdflatex report && bibtex report && pdflatex report && pdflatex report`
+root (it needs `data/` with the folders created by `04_final_model.ipynb`, `models/best_model.pt`
+and `results/classical_ml/`; a GPU is recommended), and the PDF with `pdflatex report && bibtex report && pdflatex report && pdflatex report`
 from `report/`.
 
 ## Limitations

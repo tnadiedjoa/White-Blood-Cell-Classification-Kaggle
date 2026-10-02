@@ -40,7 +40,7 @@ outputs of a notebook.
 ![Validation confusion matrix of the final model](results/deep_9_no_morph/confusion_matrix.png)
 
 Recall is above 95 % on the frequent classes (SNE, LY, EO) and drops to about 50 % on band
-neutrophils (often taken for segmented ones) and on the rare immature classes (MMY, PMY, PC),
+neutrophils (often taken for segmented ones) and on the rare classes MMY, PMY (immature granulocytes) and PC (plasma cells),
 whose few validation images also make these scores noisy; PLY has a single validation image.
 
 ## Final model
@@ -57,8 +57,8 @@ whose few validation images also make these scores noisy; PLY has a single valid
   the validation macro-F1 (best epoch 21 of 31, about 70 min on one RTX 3090).
 - **Validation**: stratified split on the original images; augmented copies of validation
   images are discarded. An earlier iteration that split after oversampling put copies of
-  validation images in the training set and reported 0.822 instead of 0.699.
-- **Inference**: average of the logits of a plain pass and 8 random flip/rotation passes.
+  the same original images on both sides of the split and reported 0.822 instead of 0.699.
+- **Inference**: average of the logits of a plain pass and 8 random flip/rotation passes (test submission only; validation scores are single-pass).
 
 ## Repository structure
 
@@ -122,7 +122,7 @@ from `report/`.
 - Only the weights of the final model are available: every training run from `deep_5` to
   `deep_9` wrote its checkpoint to the same file, so each one overwrote the previous run's.
   Their evaluation results were saved and are unaffected.
-- In the classical pipeline, SMOTE raises each rare class to 2,000 images rather than to the
+- In the classical pipeline, SMOTE raises every class with fewer than 2,000 training-fold images (10 of 13) to 2,000 images rather than to the
   size of the majority class, to keep the SVM-based models tractable. The feature filters,
   scaler and PCA are fitted before cross-validation, which makes its CV scores slightly
   optimistic.

@@ -6,8 +6,8 @@ The original experiment used 5-fold cross-validation and was saved without outpu
 script keeps its model, loss, sampler and augmentations but trains once, on a stratified
 85/15 split and for at most 15 epochs, so that its score can be checked.
 
-Run from the repository root:  python scripts/deep_1_rerun.py
-Writes metrics, history and figures to results/deep_1_rerun/.
+Run from the repository root:  python scripts/rerun_baseline_efficientnet_b3.py
+Writes metrics, history and figures to results/baseline_efficientnet_b3/.
 """
 import copy
 import json
@@ -33,7 +33,7 @@ from torchvision import models, transforms
 
 ROOT = Path(__file__).resolve().parent.parent
 DATA = ROOT / "data"
-OUT = ROOT / "results" / "deep_1_rerun"
+OUT = ROOT / "results" / "baseline_efficientnet_b3"
 SEED = 42
 IMG_SIZE = 224
 BATCH_SIZE = 32

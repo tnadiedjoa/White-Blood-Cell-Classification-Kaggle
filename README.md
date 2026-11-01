@@ -28,7 +28,7 @@ a validation leak that had inflated the score from 0.699 to 0.822 was found and 
 | **ConvNeXt-Base + SE gate + CLAHE (`deep_9 no-morph`, final model)** | 90/10 split on original images | **0.705** | **0.937** |
 
 <sup>†</sup> The original 5-fold run of `deep_1` was saved without outputs; this is a shorter
-re-run (15 epochs) of the same model, reproducible with `scripts/deep_1_rerun.py`. Its score is
+re-run (15 epochs) of the same model, reproducible with `scripts/rerun_baseline_efficientnet_b3.py`. Its score is
 noisy: an earlier unseeded run of the same script gave 0.489.
 
 All scores are computed on held-out parts of the labelled training set, not on the Kaggle
@@ -37,7 +37,7 @@ difference between `deep_6` and the final model (+0.006) is within the noise of 
 split. Every score in this table is backed by a file in [`results/`](results/) or by the
 outputs of a notebook.
 
-![Validation confusion matrix of the final model](results/deep_9_no_morph/confusion_matrix.png)
+![Validation confusion matrix of the final model](results/final_convnext_base/confusion_matrix.png)
 
 Recall is above 95 % on the frequent classes (SNE, LY, EO) and drops to about 50 % on band
 neutrophils (often taken for segmented ones) and on the rare classes MMY, PMY (immature granulocytes) and PC (plasma cells),
@@ -74,8 +74,13 @@ notebooks/
   02_classical_ml.ipynb            Classical pipeline and its results
   03_deep_learning_journey.ipynb   The nine deep-learning iterations, with their original outputs
   04_final_model.ipynb             Final model: evaluation and test predictions
-scripts/deep_1_rerun.py    Re-run of the first deep-learning baseline (EfficientNet-B3)
-results/                   Metrics, logs and predictions (results/submission.csv)
+scripts/
+  rerun_baseline_efficientnet_b3.py   Re-run of the first deep-learning baseline (EfficientNet-B3)
+results/
+  classical_ml/                Classical pipeline: cross-validation, confusion matrix, feature importance
+  baseline_efficientnet_b3/    Re-run of the first deep-learning baseline
+  final_convnext_base/         Final model (ConvNeXt-Base): history, confusion matrix, summary
+  submission.csv               Test-set predictions
 report/                    LaTeX report, its figures and generate_figures.py
 models/                    Trained weights (not versioned, see models/README.md)
 data/                      Challenge data (not versioned)

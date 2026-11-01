@@ -3,7 +3,7 @@
 `best_model.pt` (354 MB, not versioned) holds the weights of the final model, `deep_9 no-morph`:
 ConvNeXt-Base + SE-style attention gate + 3-layer MLP head
 (`src.deep_train.WBCClassifier` with the default `n_morph_features=0`). It reaches a validation
-macro-F1 of 0.7052 and an accuracy of 0.9367 (`results/deep_9_no_morph/summary.json`).
+macro-F1 of 0.7052 and an accuracy of 0.9367 (`results/final_convnext_base/summary.json`).
 
 ```python
 import torch
@@ -18,4 +18,4 @@ ckpt["epoch"], ckpt["val_f1"]   # (21, 0.7051742196484837)
 This is the only checkpoint left from the experiments: the runs from `deep_5` to `deep_9`
 all saved their best weights to this same file, so each overwrote the previous one.
 `train_model_2phase` now requires an explicit `checkpoint_path`, and retraining from
-`notebooks/04_final_model.ipynb` writes to `deep_9_no_morph_retrained.pt`.
+`notebooks/04_final_model.ipynb` writes to `final_model_retrained.pt`.

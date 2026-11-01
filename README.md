@@ -139,7 +139,7 @@ from `report/`.
   reference standard deviation instead of the pixel-level one, which compresses contrast
   before segmentation.
 
-## Main references
+## References
 
 - Z. Liu et al., *A ConvNet for the 2020s*, CVPR 2022.
 - J. Hu, L. Shen, G. Sun, *Squeeze-and-Excitation Networks*, CVPR 2018.
@@ -157,6 +157,8 @@ The complete bibliography is in [`report/references.bib`](report/references.bib)
 ## Author
 
 Théophile Nadiedjoa ([@tnadiedjoa](https://github.com/tnadiedjoa)), Télécom Paris, 2026.
+
+## License
 
 The code is released under the [MIT License](LICENSE). The challenge data and the
 referenced papers are not part of this repository and are not covered by this license.
